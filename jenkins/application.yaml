@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-mycicd-jenkins
+  namespace: ns-mycicd
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/raviagg/mycicd/jenkins
+    targetRevision: main
+    path: .
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ns-mycicd
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

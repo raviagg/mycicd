@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-mycicd-jenkins
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-mycicd-jenkins
+  template:
+    metadata:
+      labels:
+        app: app-mycicd-jenkins
+    spec:
+      containers:
+      - name: container-mycicd-jenkins
+        image: jenkins/jenkins:lts
+        ports:
+          - containerPort: 8080
+          - containerPort: 50000
+        volumeMounts:
+          - name: vm-mycicd-jenkins-home
+            mountPath: /var/jenkins_home
+      volumes:
+        - name: vm-mycicd-jenkins-home
+          persistentVolumeClaim:
+            claimName: pvc-mycicd-jenkins
