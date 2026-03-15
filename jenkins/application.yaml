@@ -7,9 +7,9 @@ spec:
   project: default
 
   source:
-    repoURL: https://github.com/raviagg/mycicd/jenkins
+    repoURL: https://github.com/raviagg/mycicd
     targetRevision: main
-    path: .
+    path: jenkins
 
   destination:
     server: https://kubernetes.default.svc

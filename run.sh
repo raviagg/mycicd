@@ -28,10 +28,10 @@ echo "**** Connect to argo on localhost:8090, with username=admin and password p
 #########################
 cd jenkins
 kubectl apply -f application.yaml
-echo "**** Deployed jenkins in K8, waiting for pods to be ready for 5secs"
+echo "**** Deployed jenkins in K8, waiting for pods to be ready for 10secs"
 
-sleep 5
-echo "**** 5secs wait is completed"
+sleep 10
+echo "**** 10 secs wait is completed"
 
 cd ..
 kubectl port-forward svc/svc-mycicd-jenkins -n ns-mycicd 8091:8080 &
