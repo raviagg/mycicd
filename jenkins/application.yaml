@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: app-mycicd-jenkins
-  namespace: ns-mycicd
+  namespace: argocd
 spec:
   project: default
 
