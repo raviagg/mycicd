@@ -3,8 +3,46 @@ kubectl create ns argocd
 echo "**** Namespace argocd created"
 
 # Create shared namespace
-kubectl create ns ns-mycicd
-echo "**** Namespace ns-mycicd created"
+GROUP=mycicd
+NS_CICD=ns-${GROUP}
+kubectl create ns ${NS_CICD}
+echo "**** Namespace ${NS_CICD} created"
+
+#########################
+# Utility Functions
+#########################
+
+wait_for_argo_app() {
+    local APP_NAME=$1
+    local NS=$2
+    local MAX_RETRIES=${3:-30} # Default to 30 retries if not provided
+    local SLEEP_TIME=10
+
+    echo "--- Waiting for Argo App: $APP_NAME in $NS ---"
+
+    for ((i=1; i<=$MAX_RETRIES; i++)); do
+        # Get statuses
+        local STATUS=$(kubectl get app "$APP_NAME" -n "$NS" -o jsonpath='{.status.sync.status} {.status.health.status}' 2>/dev/null)
+        local SYNC=$(echo $STATUS | cut -d' ' -f1)
+        local HEALTH=$(echo $STATUS | cut -d' ' -f2)
+
+        if [[ "$SYNC" == "Synced" && "$HEALTH" == "Healthy" ]]; then
+            echo "✅ $APP_NAME is Synced and Healthy!"
+            return 0
+        fi
+
+        if [[ "$HEALTH" == "Degraded" ]]; then
+            echo "❌ $APP_NAME is Degraded! Check logs."
+            return 1
+        fi
+
+        echo "Retry $i/$MAX_RETRIES: Sync=$SYNC, Health=$HEALTH..."
+        sleep $SLEEP_TIME
+    done
+
+    echo "⌛ Timeout waiting for $APP_NAME"
+    return 1
+}
 
 #########################
 # Argo Setup
@@ -30,9 +68,12 @@ cd jenkins
 kubectl apply -f application.yaml
 echo "**** Deployed jenkins in K8, waiting for pods to be ready for 10secs"
 
-sleep 10
-echo "**** 10 secs wait is completed"
+APP_NAME=app-${GROUP}-jenkins
+wait_for_argo_app ${APP_NAME} argocd 50
 
 cd ..
-kubectl port-forward svc/svc-mycicd-jenkins -n ns-mycicd 8091:8080 &
+kubectl port-forward svc/svc-${GROUP}-jenkins -n ${NS_CICD} 8091:8080 &
 echo "**** Connect to jenkins on localhost:8091"
+
+kubectl exec -n ${NS_CICD} deploy/deploy-${GROUP}-jenkins -- cat /var/jenkins_home/secrets/initialAdminPassword
+echo "**** Use above admin password for Jenkins"
